@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "./map.css";
-import { REGION_BOUNDS, type LocatedEvent } from "@/lib/vendor/geo";
+import { PAN_BOUNDS, REGION_BOUNDS, type LocatedEvent } from "@/lib/vendor/geo";
 import { formatFeeShort } from "@/lib/vendor/format";
 import { popupContent } from "./mapPopup";
 
@@ -53,10 +53,10 @@ export default function EventMap({
   useEffect(() => {
     const markers = markersRef.current;
     const map = L.map(containerRef.current!, {
-      minZoom: 7,
+      minZoom: 5,
       zoomSnap: 0.25,
       maxZoom: 17,
-      maxBounds: L.latLngBounds(REGION_BOUNDS).pad(0.8),
+      maxBounds: L.latLngBounds(PAN_BOUNDS).pad(0.15),
       maxBoundsViscosity: 0.8,
     }).fitBounds(REGION_BOUNDS);
 
@@ -147,7 +147,7 @@ export default function EventMap({
       ref={containerRef}
       className="bf-map h-full w-full"
       role="region"
-      aria-label="Map of events on the California Central Coast"
+      aria-label="Map of events in California"
     />
   );
 }

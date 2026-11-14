@@ -17,7 +17,9 @@ const mapLoading = () => (
 const MapboxEventMap = dynamic(() => import("./MapboxEventMap"), { ssr: false, loading: mapLoading });
 const EventMap = dynamic(() => import("./EventMap"), { ssr: false, loading: mapLoading });
 
-const COUNTIES = ["San Luis Obispo", "Santa Barbara"] as const;
+// The launch counties are always offered; others appear once an event there exists.
+const LAUNCH_COUNTIES = ["San Luis Obispo", "Santa Barbara"];
+const countyName = (county: string) => county.replace(/\s+county$/i, "").trim();
 const inCounty = (e: EventRow, county: string) =>
   (e.county ?? "").toLowerCase().replace(/\s+county$/, "").trim() === county.toLowerCase();
 
@@ -45,6 +47,15 @@ export default function ExploreEvents({
   const [mapboxFailed, setMapboxFailed] = useState(false);
   const { isSaved, toggle } = useSavedEvents();
   const listRef = useRef<HTMLDivElement>(null);
+
+  const counties = useMemo(() => {
+    const others = new Set<string>();
+    for (const e of events) {
+      const name = e.county && countyName(e.county);
+      if (name && !LAUNCH_COUNTIES.some((c) => c.toLowerCase() === name.toLowerCase())) others.add(name);
+    }
+    return [...LAUNCH_COUNTIES, ...[...others].sort()];
+  }, [events]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -100,7 +111,7 @@ export default function ExploreEvents({
       >
         <div className="border-b border-neutral-200 px-5 pt-5 pb-3">
           <h1 className="text-xl font-semibold tracking-tight text-neutral-950">
-            Events on the Central Coast
+            Events in California
           </h1>
           <div className="relative mt-3">
             <Search className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-neutral-500" aria-hidden />
@@ -121,7 +132,7 @@ export default function ExploreEvents({
               className={`${pill} px-3.5 ${county ? "border-neutral-950 font-medium" : ""}`}
             >
               <option value="">All counties</option>
-              {COUNTIES.map((c) => (
+              {counties.map((c) => (
                 <option key={c} value={c}>
                   {c} County
                 </option>

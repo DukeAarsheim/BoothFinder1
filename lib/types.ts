@@ -97,3 +97,59 @@ export interface BrandProfile {
   /** N: direct competitors expected per event. Optional; lib/scoring has a default. */
   competitors?: number;
 }
+
+// ---------------------------------------------------------------------------
+// Vendor-opportunity discovery (lib/discovery, lib/extractor)
+// ---------------------------------------------------------------------------
+
+export const OPPORTUNITY_STATUSES = ["pending", "approved", "rejected"] as const;
+export type OpportunityStatus = (typeof OPPORTUNITY_STATUSES)[number];
+
+/** Verbatim text from a source document that backs one extracted field. */
+export interface EvidenceQuote {
+  quote: string;
+  /** The document the quote was read from. */
+  url: string;
+}
+
+/** A document the extractor read: the page itself, or a linked application or fee sheet. */
+export interface SourceDocument {
+  url: string;
+  kind: "html" | "pdf";
+  title: string | null;
+  content_hash: string;
+}
+
+/**
+ * One discovered vendor opportunity in the review queue (table
+ * `vendor_opportunities`). Server-side only. Approving it creates an `events` row.
+ */
+export interface VendorOpportunityRow {
+  id: string;
+  status: OpportunityStatus;
+  source_url: string;
+  source_domain: string;
+  source_title: string | null;
+  source_documents: SourceDocument[];
+  discovered_via: "search" | "manual";
+  discovery_query: string | null;
+  fetched_at: string;
+  content_hash: string | null;
+  name: string;
+  organizer_name: string | null;
+  /** Only values backed by a quote in `evidence`. */
+  extracted: ExtractedEvent;
+  /** Keyed by field name. */
+  evidence: Record<string, EvidenceQuote>;
+  /** Fields the model returned that failed source verification and were discarded. */
+  dropped_fields: string[];
+  has_pricing: boolean;
+  latitude: number | null;
+  longitude: number | null;
+  geo_precision: "venue" | "city" | null;
+  event_id: string | null;
+  reviewed_at: string | null;
+  review_note: string | null;
+  created_at: string;
+  updated_at: string;
+}

@@ -4,18 +4,18 @@ import { useEffect, useRef } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import "./map.css";
-import { REGION_BOUNDS, type LatLng, type LocatedEvent } from "@/lib/vendor/geo";
+import { PAN_BOUNDS, REGION_BOUNDS, type LatLng, type LocatedEvent } from "@/lib/vendor/geo";
 import { formatFeeShort } from "@/lib/vendor/format";
 import { popupContent } from "./mapPopup";
 
 // Mapbox wants [lng, lat]; our geo helpers use [lat, lng].
 const lngLat = ([lat, lng]: LatLng): [number, number] => [lng, lat];
 const REGION: [[number, number], [number, number]] = [lngLat(REGION_BOUNDS[0]), lngLat(REGION_BOUNDS[1])];
-// How far the visitor may pan away from the two counties (degrees).
+// How far the visitor may pan: all of California, plus a small margin (degrees).
 const PAN_MARGIN = 1.2;
 const MAX_BOUNDS: [[number, number], [number, number]] = [
-  [REGION[0][0] - PAN_MARGIN, REGION[0][1] - PAN_MARGIN],
-  [REGION[1][0] + PAN_MARGIN, REGION[1][1] + PAN_MARGIN],
+  [PAN_BOUNDS[0][1] - PAN_MARGIN, PAN_BOUNDS[0][0] - PAN_MARGIN],
+  [PAN_BOUNDS[1][1] + PAN_MARGIN, PAN_BOUNDS[1][0] + PAN_MARGIN],
 ];
 const STYLE = "mapbox://styles/mapbox/light-v11";
 const FOCUS_ZOOM = 12;
@@ -96,7 +96,7 @@ export default function MapboxEventMap({
         bounds: REGION,
         fitBoundsOptions: { padding: 40 },
         maxBounds: MAX_BOUNDS,
-        minZoom: 6,
+        minZoom: 5,
         maxZoom: 17,
         dragRotate: false,
         pitchWithRotate: false,
@@ -204,7 +204,7 @@ export default function MapboxEventMap({
       ref={containerRef}
       className="bf-map h-full w-full"
       role="region"
-      aria-label="Map of events on the California Central Coast"
+      aria-label="Map of events in California"
     />
   );
 }

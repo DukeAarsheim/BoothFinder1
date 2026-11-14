@@ -103,6 +103,18 @@ There are three tables: `events`, `event_vendor_lists`, and `ratings`. The newes
 - **Types:** import row types and shared shapes from `lib/types.ts`.
 - **No invented data:** a field the source doesn't state stays `null`. Any made-up row needs `is_sample = true` and a visible "Sample" label.
 
+## Vendor-opportunity discovery
+
+Finds California fairs, festivals, farmers markets, holiday markets, and organizers that publicly advertise vendor opportunities, and queues them for review at `/admin/discovery`.
+
+1. **Search** (`lib/discovery`): each run takes the next 6 of 290 queries (5 kinds of opportunity × 58 counties), so daily runs cover the state in about seven weeks. Tune in `lib/discovery/queries.ts` and `config.ts`.
+2. **Read** (`lib/extractor/fetchSource.ts`): fetches the page, plus up to three linked vendor handbooks, applications, or fee sheets (HTML, PDF, or a public Google Doc). It obeys `robots.txt`, identifies itself, and skips social networks and paid listing databases.
+3. **Extract and verify** (`lib/extractor`): the AI returns each fact with a verbatim quote. `verify.ts` keeps a fact only if the quote is in the source and supports the value (the dollar figure, the day and month, the words of the name). Everything else is dropped and listed for the reviewer. Nothing is guessed.
+4. **Review**: results land in `vendor_opportunities` as `pending`. A teammate opens `/admin/discovery`, enters the `DISCOVERY_ADMIN_TOKEN`, checks the quotes, and approves or rejects.
+5. **Publish**: approving copies the facts into `events` with coordinates, so the event appears on the vendor map and is available to the Fit score. Nothing reaches `events` without approval.
+
+It needs migration `20261114230000_add_vendor_opportunity_discovery` applied, plus the env vars in the "discovery" block of `.env.example`. `vercel.json` schedules a daily run; it does nothing until `CRON_SECRET` is set. `npm test` runs the verification tests (Node 22.18 or newer).
+
 ## Environment variables
 
 | Name | Used by | Notes |

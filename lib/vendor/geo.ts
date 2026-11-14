@@ -1,10 +1,10 @@
 import type { EventRow } from "@/lib/types";
 
 /**
- * The events table has no latitude/longitude, so the map places each event at
- * its city (or, failing that, its county seat). Pins are city-level, not
- * venue-level. If the schema gains coordinates later, read them in
- * `locateEvents` and fall back to this table.
+ * Where each event goes on the map. An event with `latitude`/`longitude`
+ * (geocoded when a discovered opportunity is approved; see lib/discovery) is
+ * pinned there. Events without coordinates are placed at their city or, failing
+ * that, their county seat, using the Central Coast table below.
  */
 export type LatLng = [lat: number, lng: number];
 
@@ -12,6 +12,12 @@ export type LatLng = [lat: number, lng: number];
 export const REGION_BOUNDS: [LatLng, LatLng] = [
   [34.35, -121.35],
   [35.8, -119.45],
+];
+
+/** How far the map can be panned: all of California, where discovery looks. */
+export const PAN_BOUNDS: [LatLng, LatLng] = [
+  [32.3, -124.7],
+  [42.1, -114.0],
 ];
 
 const CITY_COORDS: Record<string, LatLng> = {
@@ -66,11 +72,11 @@ export type LocatedEvent = {
   event: EventRow;
   position: LatLng;
   /** How the pin was placed. "county" pins are rough. */
-  precision: "city" | "county";
+  precision: "exact" | "city" | "county";
 };
 
 /**
- * Gives every event it can a map position. Events that share a city are fanned
+ * Gives every event it can a map position. Events that share a point are fanned
  * out in a small spiral so their pins don't stack on one point.
  */
 export function locateEvents(events: EventRow[]): LocatedEvent[] {
@@ -78,8 +84,15 @@ export function locateEvents(events: EventRow[]): LocatedEvent[] {
   const located: LocatedEvent[] = [];
 
   for (const event of events) {
+    // These columns arrive with migration 20261114230000; older rows don't have them.
+    const { latitude, longitude } = event as EventRow & {
+      latitude?: number | null;
+      longitude?: number | null;
+    };
+    const exact: LatLng | undefined =
+      latitude != null && longitude != null ? [latitude, longitude] : undefined;
     const city = CITY_COORDS[clean(event.city)];
-    const base = city ?? COUNTY_COORDS[clean(event.county)];
+    const base = exact ?? city ?? COUNTY_COORDS[clean(event.county)];
     if (!base) continue;
 
     const key = base.join(",");
@@ -92,7 +105,7 @@ export function locateEvents(events: EventRow[]): LocatedEvent[] {
     located.push({
       event,
       position: [base[0] + r * Math.sin(a), base[1] + (r * Math.cos(a)) / 0.82],
-      precision: city ? "city" : "county",
+      precision: exact ? "exact" : city ? "city" : "county",
     });
   }
   return located;

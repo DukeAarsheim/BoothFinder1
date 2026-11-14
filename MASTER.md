@@ -337,13 +337,16 @@ Tiebreak: Real problem, then Execution & design.
 - OpenStreetMap contributors (map tiles and data, ODbL)
 - Lucide (icons)
 - Figtree (typeface, Google Fonts, OFL)
+- Tavily Search API (web search for vendor-opportunity discovery)
+- Nominatim / OpenStreetMap (geocoding discovered events; data under ODbL)
 - SeatGeek (visual reference for the vendor dashboard's layout and style; no assets or code used)
-- unpdf (reads text from vendor packet PDFs for the AI extractor)
+- unpdf (reads text from vendor packet PDFs for the AI extractor and discovery)
 - _add more…_
 
 ### AI tools used & what they did (for the submission form)
 - Claude Code / Codex — code generation
 - LLM in product — event extraction from PDFs, web pages and pasted text (Groq, `openai/gpt-oss-120b`), on Event Host › Create Event
+- LLM in product — vendor-opportunity discovery: reads organizer pages and linked vendor PDFs found by web search, returns each fact with a verbatim quote; code checks every quote against the source and discards facts that don't match, then a person approves before anything is published
 - _add more…_
 
 ### Real-user evidence
@@ -361,6 +364,7 @@ Record anything the team decides that changes how code is written. Newest at the
 | Nov 14 | Purchase rate `p` = **category-wide** share of attendees (all competing vendors), split by `1 + N` | Team (Hayden) |
 | Nov 14 | Return → R: clamp operating return **−100% … +200%** linearly onto 0–1 (`RETURN_TO_R` in `lib/scoring/projection.ts`) | Hayden (Fit-score card) |
 | Nov 14 | Extractor = Event Host › Create Event (`/host/dashboard/create`); uses the shared Groq settings `AI_API_KEY`, `AI_BASE_URL`, `AI_MODEL` (`openai/gpt-oss-120b`) | Paxton |
+| Nov 14 | Discovery covers all of California (58 counties, San Luis Obispo and Santa Barbara searched first). Discovered opportunities reach `events` only after a person approves them at `/admin/discovery` | Bodie |
 | Nov 14 | Landing hero = scroll-driven 3D booth; all tuning lives in `/lib/hero/heroConfig.ts` (§12) | Bodie |
 | Nov 13 | Stack: Next.js + Supabase + Vercel | Team |
 | Nov 13 | Workflow: Kanban card → feature branch → PR → merge commit to main | Team |
